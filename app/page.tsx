@@ -1,4 +1,3 @@
-
 'use client'
 import {
   Card,
@@ -6,15 +5,16 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-} from "../components/ui/card";
-import { Button } from "../components/ui/button";
+} from "../styleguide/components/ui/card";
+import { Button } from "../styleguide/components/ui/button";
 import Image from "next/image";
+import Container from "@/components/Container";
 
 export default function HomePage() {
   return (
     <main>
       <section className="text-black py-20">
-        <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <Container className="py-20 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <h1 className="text-5xl text-black font-extrabold leading-tight">
               Code Commit Club
@@ -34,11 +34,11 @@ export default function HomePage() {
               src="/Code-Commit-Club-Logo.png"
             />
           </div>
-        </div>
+        </Container>
       </section>
 
       <section className="py-20">
-        <div className="container mx-auto text-center space-y-12">
+        <Container className="py-20 text-center">
           <h2 className="text-3xl font-bold">Why Commit Daily?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <Card>
@@ -49,7 +49,7 @@ export default function HomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                Share your progress on Discord or Slack and never code alone.
+                Share your progress on Discord and never code alone.
               </CardContent>
             </Card>
             <Card>
@@ -75,18 +75,18 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </Container>
       </section>
 
       <section className="bg-gray-100 py-20">
-        <div className="container mx-auto text-center space-y-6">
+        <Container className="py-20 text-center">
           <h3 className="text-2xl font-semibold">
             Ready to build the habit?
           </h3>
           <Button size="lg" variant="default">
             Login
           </Button>
-        </div>
+        </Container>
       </section>
     </main>
   );
