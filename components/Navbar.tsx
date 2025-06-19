@@ -3,12 +3,9 @@ import Link from "next/link"
 import { Menu, X } from "lucide-react"
 import {
     NavigationMenu,
-    NavigationMenuContent,
     NavigationMenuIndicator,
-    NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
-    NavigationMenuTrigger,
     NavigationMenuViewport,
 } from "@/styleguide/components/ui/navigation-menu"
 
