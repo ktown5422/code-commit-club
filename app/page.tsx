@@ -9,11 +9,14 @@ import {
 import { Button } from "../styleguide/components/ui/button";
 import Image from "next/image";
 import Container from "@/components/Container";
+import Navbar from "@/components/Navbar";
+import Link from "next/link";
 
 export default function HomePage() {
   return (
     <main>
       <section className="text-black py-20">
+        <Navbar />
         <Container className="py-20 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <h1 className="text-5xl text-black font-extrabold leading-tight">
@@ -22,9 +25,18 @@ export default function HomePage() {
             <p className="text-lg text-black opacity-90">
               Turning daily commits into developer habits.
             </p>
-            <Button size="lg" variant="default">
-              Login
-            </Button>
+            <div className="flex space-x-4">
+              <Link href="/signup">
+                <Button size="lg" variant="default">
+                  Get Started
+                </Button>
+              </Link>
+              <Link href="/login">
+                <Button size="lg" variant="outline">
+                  Log In
+                </Button>
+              </Link>
+            </div>
           </div>
           <div>
             <Image
