@@ -39,6 +39,7 @@ export default function HomePage() {
               height={550}
               alt="Code Commit Club Logo"
               src="/Code-Commit-Club-Logo.png"
+              className="rounded-xl"
             />
           </div>
         </Container>
