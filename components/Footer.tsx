@@ -1,6 +1,7 @@
 import Link from "next/link"
 import Container from "../components/Container"
 import { Button } from "../styleguide/components/ui/button"
+import { FaDiscord, FaGithub, FaTwitter } from "react-icons/fa"
 
 export default function Footer() {
     return (
@@ -70,7 +71,17 @@ export default function Footer() {
                         <p className="mb-4 text-gray-400">
                             Follow us on social media for updates and community highlights.
                         </p>
-
+                        <div className="flex space-x-4">
+                            <Link className="hover:text-white" href="https://github.com/your-org">
+                                <FaGithub className="w-6 h-6" />
+                            </Link>
+                            <Link className="hover:text-white" href="https://twitter.com/your-handle">
+                                <FaTwitter className="w-6 h-6" />
+                            </Link>
+                            <Link className="hover:text-white" href="https://discord.gg/your-invite">
+                                <FaDiscord className="w-6 h-6" />
+                            </Link>
+                        </div>
                     </div>
                 </Container>
             </div>

@@ -46,7 +46,7 @@ export default function HomePage() {
       </section>
 
       <section>
-        <Container className="py-20">
+        <Container className="pb-20">
           <h2 className="text-3xl font-bold text-center mb-12">
             Why Commit Daily?
           </h2>
