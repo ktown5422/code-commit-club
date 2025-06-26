@@ -1,4 +1,4 @@
-// components/Navbar.tsx
+
 "use client"
 
 import { useState } from "react"
@@ -27,7 +27,7 @@ export default function Navbar() {
                         alt="Code Commit Club Logo"
                         width={32}
                         height={32}
-                        className="rounded-full"
+                        className="rounded-md"
                     />
                     <span className="text-xl font-bold">Code Commit Club</span>
                 </Link>

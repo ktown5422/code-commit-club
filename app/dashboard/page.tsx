@@ -1,12 +1,12 @@
 
 import { redirect } from "next/navigation"
-import { auth } from "../../lib/auth"    // or wherever you export auth()
+import { auth } from "../../lib/auth"
 import Navbar from "@/components/Navbar"
 
 export default async function DashboardPage() {
     const session = await auth()
     if (!session) {
-        // kicks unauthenticated users back to /login
+
         return redirect("/")
     }
 
@@ -20,7 +20,7 @@ export default async function DashboardPage() {
             <h1 className="text-2xl font-bold mb-4 text-center">
                 Welcome back, {session.user?.name}!
             </h1>
-            {/* your dashboard UI… */}
+            {/* dashboard UI… */}
         </>
     )
 }
