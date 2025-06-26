@@ -12,26 +12,20 @@ export default function HomePage() {
     <main>
       <section className="text-black py-10">
         <Navbar />
+
         <Container className="py-20 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
-            <h1 className="text-nowrap text-black font-extrabold text-3xl md:text-4xl lg:text-5xl leading-tight">
+            <h1 className="font-extrabold text-3xl md:text-4xl lg:text-5xl leading-tight">
               Code Commit Club
             </h1>
-            <p className="text-lg text-black opacity-90">
+            <p className="text-lg opacity-90">
               Turning daily commits into developer habits.
             </p>
-            <div className="flex space-x-4">
-              <Link href="/signup">
-                <Button size="lg" variant="default">
-                  Get Started
-                </Button>
-              </Link>
-              <Link href="/login">
-                <Button size="lg" variant="outline">
-                  Log In
-                </Button>
-              </Link>
-            </div>
+            <Link href="/signup">
+              <Button size="lg" variant="default">
+                Get Started
+              </Button>
+            </Link>
           </div>
           <div>
             <Image
@@ -39,11 +33,12 @@ export default function HomePage() {
               height={550}
               alt="Code Commit Club Logo"
               src="/Code-Commit-Club-Logo.png"
-              className="rounded-xl"
+              className="rounded-full shadow-xl"
             />
           </div>
         </Container>
       </section>
+
 
       <section>
         <Container className="pb-20">

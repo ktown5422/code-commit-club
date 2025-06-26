@@ -1,6 +1,11 @@
+// components/Navbar.tsx
+"use client"
+
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Menu, X } from "lucide-react"
+import { AuthButton } from "./AuthButton"
 import {
     NavigationMenu,
     NavigationMenuIndicator,
@@ -15,57 +20,55 @@ export default function Navbar() {
     return (
         <header className="fixed top-0 w-full bg-white shadow z-10">
             <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
-                <Link href="/" className="text-xl font-bold">
-                    Code Commit Club
+
+                <Link href="/" className="flex items-center space-x-2">
+                    <Image
+                        src="/Code-Commit-Club-Logo.png"
+                        alt="Code Commit Club Logo"
+                        width={32}
+                        height={32}
+                        className="rounded-full"
+                    />
+                    <span className="text-xl font-bold">Code Commit Club</span>
                 </Link>
 
                 <div className="hidden md:flex items-center space-x-8">
                     <NavigationMenu>
                         <NavigationMenuList className="flex space-x-4">
-                            <NavigationMenuLink href="/contact">Leaderboard</NavigationMenuLink>
-                            <NavigationMenuLink href="/login">Login</NavigationMenuLink>
-                            <NavigationMenuLink
-                                className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
-                                href="/signup">Sign Up
+                            <NavigationMenuLink href="/leaderboard">
+                                Leaderboard
                             </NavigationMenuLink>
                         </NavigationMenuList>
                         <NavigationMenuIndicator />
                         <NavigationMenuViewport />
                     </NavigationMenu>
 
-                    {/* <div className="flex items-center space-x-4">
-                        <Link href="/login" className="text-gray-700 hover:text-gray-900">
-                            Log In
-                        </Link>
-                        <Link href="/signup" className="inline-block bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
-                            Sign Up
-                        </Link>
-                    </div> */}
+                    <AuthButton />
                 </div>
 
-                {/* Mobile toggle button */}
+
                 <button
                     className="md:hidden focus:outline-none"
                     onClick={() => setMobileOpen((o) => !o)}
-                    aria-label="Toggle navigation menu"
+                    aria-label="Toggle menu"
                 >
                     {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
             </nav>
 
-            {/* Mobile nav */}
+
             {mobileOpen && (
                 <div className="md:hidden bg-white shadow border-t">
                     <div className="px-4 py-3 space-y-2">
-                        <Link href="/contact" className="block px-2 py-1 rounded hover:bg-gray-100">
+                        <Link
+                            href="/leaderboard"
+                            className="block px-2 py-1 rounded hover:bg-gray-100"
+                        >
                             Leaderboard
                         </Link>
-                        <Link href="/login" className="block px-2 py-1 rounded hover:bg-gray-100">
-                            Log In
-                        </Link>
-                        <Link href="/signup" className="block px-2 py-2 text-center bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                            Sign Up
-                        </Link>
+                        <div className="pt-2 border-t">
+                            <AuthButton />
+                        </div>
                     </div>
                 </div>
             )}

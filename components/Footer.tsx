@@ -2,6 +2,7 @@ import Link from "next/link"
 import Container from "../components/Container"
 import { Button } from "../styleguide/components/ui/button"
 import { FaDiscord, FaGithub, FaTwitter } from "react-icons/fa"
+import { AuthButton } from "./AuthButton"
 
 export default function Footer() {
     return (
@@ -11,9 +12,7 @@ export default function Footer() {
                     <h3 className="text-2xl font-semibold text-white mb-4 md:mb-0">
                         Ready to build the habit?
                     </h3>
-                    <Button size="lg" variant="secondary" asChild>
-                        <Link href="/login">Login</Link>
-                    </Button>
+                    <AuthButton />
                 </Container>
             </div>
 
