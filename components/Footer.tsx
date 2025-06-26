@@ -1,6 +1,5 @@
 import Link from "next/link"
 import Container from "../components/Container"
-import { Button } from "../styleguide/components/ui/button"
 import { FaDiscord, FaGithub, FaTwitter } from "react-icons/fa"
 import { AuthButton } from "./AuthButton"
 
