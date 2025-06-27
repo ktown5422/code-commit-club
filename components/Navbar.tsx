@@ -35,8 +35,8 @@ export default function Navbar() {
                 <div className="hidden md:flex items-center space-x-8">
                     <NavigationMenu>
                         <NavigationMenuList className="flex space-x-4">
-                            <NavigationMenuLink href="/leaderboard">
-                                Leaderboard
+                            <NavigationMenuLink href="/dashboard" className="text-gray-700 hover:text-gray-900">
+                                Dashboard
                             </NavigationMenuLink>
                         </NavigationMenuList>
                         <NavigationMenuIndicator />
