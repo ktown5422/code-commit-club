@@ -61,10 +61,10 @@ export default function Navbar() {
                 <div className="md:hidden bg-white shadow border-t">
                     <div className="px-4 py-3 space-y-2">
                         <Link
-                            href="/leaderboard"
+                            href="/dashboard"
                             className="block px-2 py-1 rounded hover:bg-gray-100"
                         >
-                            Leaderboard
+                            Dashboard
                         </Link>
                         <div className="pt-2 border-t">
                             <AuthButton />
