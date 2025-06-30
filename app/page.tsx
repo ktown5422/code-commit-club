@@ -8,6 +8,7 @@ import { FeatureCard } from "../components/FeatureCard"
 import Footer from "@/components/Footer"
 import { motion } from "framer-motion"
 import { BsDiscord } from "react-icons/bs"
+import { FaGripfire } from "react-icons/fa"
 
 export default function HomePage() {
   return (
@@ -36,6 +37,7 @@ export default function HomePage() {
                 className="inline-flex mr-1"
               >
                 <Button size="lg" variant="default">
+                  <FaGripfire />
                   Get Started
                 </Button>
               </motion.div>
