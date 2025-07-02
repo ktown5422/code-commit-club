@@ -6,7 +6,7 @@ import { AuthButton } from "./AuthButton"
 export default function Footer() {
     return (
         <footer className="text-gray-200">
-            <div className="bg-indigo-600">
+            <div id="ready" className="bg-indigo-600">
                 <Container className="py-12 flex flex-col md:flex-row items-center justify-between">
                     <h3 className="text-2xl font-semibold text-white mb-4 md:mb-0">
                         Ready to build the habit?
@@ -21,18 +21,9 @@ export default function Footer() {
                     <div>
                         <h5 className="text-lg font-semibold text-white mb-4">Company</h5>
                         <ul className="space-y-2">
+
                             <li>
-                                <Link href="/about" className="hover:text-white">
-                                    About Us
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/blog" className="hover:text-white">
-                                    Blog
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/contact" className="hover:text-white">
+                                <Link href="/" className="hover:text-white">
                                     Contact
                                 </Link>
                             </li>
@@ -43,18 +34,9 @@ export default function Footer() {
                     <div>
                         <h5 className="text-lg font-semibold text-white mb-4">Community</h5>
                         <ul className="space-y-2">
+
                             <li>
-                                <Link href="/signup" className="hover:text-white">
-                                    Sign Up
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/login" className="hover:text-white">
-                                    Login
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/discord" className="hover:text-white">
+                                <Link href="https://discord.gg/aFNtEHSy76" className="hover:text-white">
                                     Discord
                                 </Link>
                             </li>

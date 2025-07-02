@@ -9,6 +9,8 @@ import Footer from "@/components/Footer"
 import { motion } from "framer-motion"
 import { BsDiscord } from "react-icons/bs"
 import { FaGripfire } from "react-icons/fa"
+import TestimonialCard from "@/components/testimonialsCard"
+import { testimonials } from "@/lib/testimonialsData"
 
 export default function HomePage() {
   return (
@@ -30,7 +32,7 @@ export default function HomePage() {
               Turning daily commits into developer habits.
             </p>
 
-            <Link href="/signup">
+            <Link href="#ready">
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: 'spring', stiffness: 300 }}
@@ -78,7 +80,7 @@ export default function HomePage() {
         </Container>
       </section >
 
-      {/* Features */}
+
       < section >
         <Container className="pb-20">
           <h2 className="text-3xl font-bold text-center mb-12">
@@ -119,6 +121,71 @@ export default function HomePage() {
           </div>
         </Container>
       </section >
+
+      <section className="py-20 bg-gray-50">
+        <Container>
+          <h2 className="text-3xl font-bold text-center mb-12">
+            What our members say
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {testimonials.map((t, i) => (
+              <motion.div
+                key={t.name}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.3 }}
+                transition={{ delay: i * 0.2, duration: 0.6 }}
+              >
+                <TestimonialCard {...t} />
+              </motion.div>
+            ))}
+          </div>
+        </Container>
+      </section>
+
+      <section className="py-20">
+        <Container>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-4xl mx-auto"
+          >
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+
+              <div className="flex justify-center md:justify-start">
+                <div className="w-48 h-48 rounded-full overflow-hidden shadow-lg border-4 border-white">
+                  <Image
+                    src="/IMG_5601.jpg"
+                    alt="Kevin Townson"
+                    width={192}
+                    height={192}
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+
+
+              <div className="md:col-span-2 space-y-6">
+                <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight">
+                  About the Founder
+                </h2>
+
+                <div className="w-16 h-1 bg-indigo-500 rounded-full"></div>
+
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  <strong>Kevin Townson</strong> is a seasoned Software Engineer and the driving force behind Code Commit Club. Based in Houston, Texas, Kevin was inspired to create this platform to help developers track their consistency and build a supportive community through daily GitHub commits.
+                </p>
+
+                <p className="text-lg text-gray-700 leading-relaxed">
+                  With deep expertise in React, Next.js, and modern web tooling, he’s passionate about making coding habits stick and helping developers showcase their growth, <strong>one commit at a time</strong>.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </Container>
+      </section>
       <Footer />
     </main >
   )
