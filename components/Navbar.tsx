@@ -5,6 +5,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Menu, X } from "lucide-react"
+import { useSession } from "next-auth/react"
 import { AuthButton } from "./AuthButton"
 import {
     NavigationMenu,
@@ -16,6 +17,7 @@ import {
 
 export default function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false)
+    const { data: session } = useSession()
 
     return (
         <header className="fixed top-0 w-full bg-white shadow z-10">
@@ -33,15 +35,17 @@ export default function Navbar() {
                 </Link>
 
                 <div className="hidden md:flex items-center space-x-8">
-                    <NavigationMenu>
-                        <NavigationMenuList className="flex space-x-4">
-                            <NavigationMenuLink href="/dashboard" className="text-gray-700 hover:text-gray-900">
-                                Dashboard
-                            </NavigationMenuLink>
-                        </NavigationMenuList>
-                        <NavigationMenuIndicator />
-                        <NavigationMenuViewport />
-                    </NavigationMenu>
+                    {session && (
+                        <NavigationMenu>
+                            <NavigationMenuList className="flex space-x-4">
+                                <NavigationMenuLink href="/dashboard" className="text-gray-700 hover:text-gray-900">
+                                    Dashboard
+                                </NavigationMenuLink>
+                            </NavigationMenuList>
+                            <NavigationMenuIndicator />
+                            <NavigationMenuViewport />
+                        </NavigationMenu>
+                    )}
 
                     <AuthButton />
                 </div>
@@ -60,12 +64,15 @@ export default function Navbar() {
             {mobileOpen && (
                 <div className="md:hidden bg-white shadow border-t">
                     <div className="px-4 py-3 space-y-2">
-                        <Link
-                            href="/dashboard"
-                            className="block px-2 py-1 rounded hover:bg-gray-100"
-                        >
-                            Dashboard
-                        </Link>
+                        {session && (
+                            <Link
+                                href="/dashboard"
+                                className="block px-2 py-1 rounded hover:bg-gray-100"
+                                onClick={() => setMobileOpen(false)}
+                            >
+                                Dashboard
+                            </Link>
+                        )}
                         <div className="pt-2 border-t">
                             <AuthButton />
                         </div>
