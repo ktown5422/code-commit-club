@@ -34,7 +34,7 @@ export default function ProfileCard({ user, className }: ProfileCardProps) {
                     <h2 className="text-xl font-bold text-[#111827]">
                         {user.name ?? "Club member"}
                     </h2>
-                    <p className="break-all text-sm text-[#52606d]">{user.email ?? "GitHub member"}</p>
+                    <p className="break-all text-sm text-[#52606d]">{user.email ?? "Signed-in member"}</p>
                 </div>
             </CardContent>
         </Card>
