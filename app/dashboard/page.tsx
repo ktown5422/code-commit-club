@@ -86,7 +86,9 @@ export default async function DashboardPage() {
                             <div className="space-y-6">
                                 <div className="inline-flex w-fit items-center gap-2 rounded-md border border-[#b7d9d3] bg-[#e8f6f3] px-3 py-1 text-sm font-medium text-[#126457]">
                                     <Sparkles className="h-4 w-4" />
-                                    Day 15 is ready
+                                    {currentStreak > 0
+                                        ? `Day ${currentStreak} is ready`
+                                        : "Start your streak today"}
                                 </div>
 
                                 <div className="max-w-2xl space-y-3">
