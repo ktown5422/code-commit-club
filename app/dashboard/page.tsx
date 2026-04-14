@@ -14,44 +14,9 @@ import Leaderboard from "@/components/Leaderboard"
 import Navbar from "@/components/Navbar"
 import ProfileCard from "@/components/ProfileCard"
 import StatsCard from "@/components/StatsCard"
+import { getGitHubDashboardData } from "@/lib/github"
 import { Card, CardContent } from "@/styleguide/components/ui/card"
 import { auth } from "@/lib/auth"
-
-const commitActivity = [
-    { date: "Mon", count: 8 },
-    { date: "Tue", count: 12 },
-    { date: "Wed", count: 6 },
-    { date: "Thu", count: 16 },
-    { date: "Fri", count: 10 },
-    { date: "Sat", count: 5 },
-    { date: "Sun", count: 14 },
-]
-
-const leaderboard = [
-    { username: "alice", commits: 240, streak: 31 },
-    { username: "bob", commits: 218, streak: 24 },
-    { username: "carol", commits: 196, streak: 18 },
-    { username: "dani", commits: 175, streak: 16 },
-]
-
-const goals = [
-    { label: "Daily commit", current: 1, target: 1 },
-    { label: "Weekly commits", current: 71, target: 84 },
-    { label: "Monthly streak", current: 15, target: 30 },
-]
-
-const wins = [
-    "Shipped commits on 6 of the last 7 days",
-    "Beat last week's commit count by 18%",
-    "Joined the top 10 for current streaks",
-]
-
-const fallbackGitHubStats = {
-    followers: 128,
-    following: 84,
-    publicRepos: 32,
-    totalStars: 416,
-}
 
 export default async function DashboardPage() {
     const session = await auth()
@@ -59,6 +24,56 @@ export default async function DashboardPage() {
 
     const user = session.user
     const firstName = user?.name?.split(" ")[0] ?? "developer"
+    const accessToken = session.accessToken
+
+    let dashboardData = null
+
+    if (accessToken) {
+        try {
+            dashboardData = await getGitHubDashboardData(accessToken)
+        } catch (error) {
+            console.error("Failed to load GitHub dashboard data", error)
+        }
+    }
+
+    const profile = dashboardData?.profile
+    const commitActivity = dashboardData?.commitActivity ?? [
+        { date: "Mon", count: 0 },
+        { date: "Tue", count: 0 },
+        { date: "Wed", count: 0 },
+        { date: "Thu", count: 0 },
+        { date: "Fri", count: 0 },
+        { date: "Sat", count: 0 },
+        { date: "Sun", count: 0 },
+    ]
+    const recentCommitCount = dashboardData?.recentCommitCount ?? 0
+    const currentStreak = dashboardData?.currentStreak ?? 0
+    const longestStreak = dashboardData?.longestStreak ?? 0
+    const repos = dashboardData?.repos ?? []
+    const leaderboard = dashboardData?.topContributors ?? []
+    const topRepo = repos[0]
+    const goals = [
+        { label: "Daily commit", current: commitActivity.at(-1)?.count ? 1 : 0, target: 1 },
+        { label: "Weekly commits", current: recentCommitCount, target: 7 },
+        { label: "Active repos", current: repos.length, target: Math.max(repos.length || 1, 3) },
+    ]
+    const wins = [
+        currentStreak > 0
+            ? `Committed on ${currentStreak} straight day${currentStreak === 1 ? "" : "s"}`
+            : "Your next commit starts a fresh streak",
+        topRepo
+            ? `${topRepo.name} is your most recently pushed repo`
+            : "Connect GitHub data to surface your active repositories",
+        leaderboard[0]
+            ? `Top contributor right now is @${leaderboard[0].username}`
+            : "Contributor rankings will appear once repo data loads",
+    ]
+    const stats = {
+        followers: profile?.followers ?? 0,
+        following: profile?.following ?? 0,
+        publicRepos: profile?.publicRepos ?? repos.length,
+        totalStars: profile?.totalStars ?? 0,
+    }
 
     return (
         <main className="min-h-screen bg-[#f8fafc] text-[#111827]">
@@ -84,13 +99,22 @@ export default async function DashboardPage() {
                                 </div>
 
                                 <div className="grid gap-3 sm:grid-cols-3">
-                                    <StatsCard label="Next milestone" value="20 days" detail="Five commits away" />
-                                    <StatsCard label="Best day" value="Thu" detail="16 commits logged" />
-                                    <StatsCard label="Focus window" value="9 PM" detail="Your strongest rhythm" />
+                                    <StatsCard label="GitHub handle" value={profile?.login ? `@${profile.login}` : "Connect"} detail="Signed-in account" />
+                                    <StatsCard label="Top repo" value={topRepo?.name ?? "No data"} detail={topRepo ? `${topRepo.stars} stars` : "Waiting on repo data"} />
+                                    <StatsCard label="Recent repos" value={repos.length} />
                                 </div>
                             </div>
 
-                            <ProfileCard user={user ?? {}} className="h-fit" />
+                            <ProfileCard
+                                user={{
+                                    ...user,
+                                    bio: profile?.bio,
+                                    image: profile?.avatarUrl ?? user?.image,
+                                    login: profile?.login ?? user?.login,
+                                    name: profile?.name ?? user?.name,
+                                }}
+                                className="h-fit"
+                            />
                         </CardContent>
                     </Card>
 
@@ -121,10 +145,10 @@ export default async function DashboardPage() {
                 </section>
 
                 <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <StatsCard label="Total commits" value="1,234" detail="+142 this month" />
-                    <StatsCard label="Current streak" value="15 days" detail="Keep it alive today" />
-                    <StatsCard label="Longest streak" value="42 days" detail="Personal best" />
-                    <StatsCard label="Club rank" value="#8" detail="Up 3 spots" />
+                    <StatsCard label="Recent commits" value={recentCommitCount} detail="Last 7 days" />
+                    <StatsCard label="Current streak" value={`${currentStreak} day${currentStreak === 1 ? "" : "s"}`} detail="Days with commits" />
+                    <StatsCard label="Longest streak" value={`${longestStreak} day${longestStreak === 1 ? "" : "s"}`} detail="Within this week" />
+                    <StatsCard label="Repositories" value={repos.length} detail="Tracked from GitHub" />
                 </section>
 
                 <section className="mt-6 grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
@@ -167,7 +191,7 @@ export default async function DashboardPage() {
                 </section>
 
                 <section className="mt-6 grid gap-6 lg:grid-cols-2">
-                    <GitHubStatsChart fallbackStats={fallbackGitHubStats} />
+                    <GitHubStatsChart fallbackStats={stats} />
                     <Leaderboard data={leaderboard} />
                 </section>
 

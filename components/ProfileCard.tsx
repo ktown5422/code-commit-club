@@ -4,9 +4,11 @@ import { cn } from "@/lib/utils"
 
 interface ProfileCardProps {
     user: {
+        bio?: string | null
         name?: string | null
         email?: string | null
         image?: string | null
+        login?: string
     }
     className?: string
 }
@@ -34,7 +36,9 @@ export default function ProfileCard({ user, className }: ProfileCardProps) {
                     <h2 className="text-xl font-bold text-[#111827]">
                         {user.name ?? "Club member"}
                     </h2>
+                    {user.login && <p className="text-sm font-medium text-[#0f766e]">@{user.login}</p>}
                     <p className="break-all text-sm text-[#52606d]">{user.email ?? "Signed-in member"}</p>
+                    {user.bio && <p className="pt-2 text-sm leading-6 text-[#52606d]">{user.bio}</p>}
                 </div>
             </CardContent>
         </Card>
