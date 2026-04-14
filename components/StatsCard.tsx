@@ -9,17 +9,30 @@ interface StatsCardProps {
 }
 
 export default function StatsCard({ label, value, detail, className }: StatsCardProps) {
+    const valueText = String(value)
+    const valueSizeClass =
+        valueText.length > 18
+            ? "text-lg"
+            : valueText.length > 12
+              ? "text-xl"
+              : "text-2xl"
+
+    const labelSizeClass =
+        label.length > 24
+            ? "text-xs"
+            : "text-sm"
+
     return (
         <Card className={cn("rounded-lg border-[#d9e2ec] p-5 shadow-sm", className)}>
             <CardContent className="px-0">
-                <p
-                    className="font-sans text-[clamp(0.8rem,0.78rem+0.2vw,0.95rem)] leading-5 font-medium text-[#52606d]"
-                    style={{ overflowWrap: "anywhere" }}
-                >
+                <p className={cn("font-sans leading-5 font-medium text-[#52606d]", labelSizeClass)} style={{ overflowWrap: "anywhere" }}>
                     {label}
                 </p>
                 <p
-                    className="mt-2 font-sans text-[clamp(1.5rem,1.15rem+1.2vw,2rem)] leading-tight font-black tracking-normal tabular-nums text-[#111827]"
+                    className={cn(
+                        "mt-2 font-sans leading-tight font-black tracking-normal tabular-nums text-[#111827]",
+                        valueSizeClass
+                    )}
                     style={{ overflowWrap: "anywhere" }}
                 >
                     {value}
