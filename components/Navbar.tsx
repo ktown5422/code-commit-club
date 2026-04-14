@@ -4,14 +4,9 @@
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { LayoutDashboard, Menu, X } from "lucide-react"
+import { LayoutDashboard, Menu, Sparkles, X } from "lucide-react"
 import { useSession } from "next-auth/react"
 import { AuthButton } from "./AuthButton"
-import {
-    NavigationMenu,
-    NavigationMenuLink,
-    NavigationMenuList,
-} from "@/styleguide/components/ui/navigation-menu"
 
 export default function Navbar() {
     const [mobileOpen, setMobileOpen] = useState(false)
@@ -40,32 +35,8 @@ export default function Navbar() {
                             </div>
                         </Link>
 
-                        <div className="hidden items-center gap-4 md:flex">
-                            <NavigationMenu viewport={false}>
-                                <NavigationMenuList className="gap-2">
-                                    <NavigationMenuLink
-                                        href="/"
-                                        className="rounded-md px-3 py-2 font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                                    >
-                                        Home
-                                    </NavigationMenuLink>
-                                    {session && (
-                                        <NavigationMenuLink
-                                            href="/dashboard"
-                                            className="flex flex-row items-center gap-2 rounded-md px-3 py-2 font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                                        >
-                                            <LayoutDashboard className="h-4 w-4" />
-                                            Dashboard
-                                        </NavigationMenuLink>
-                                    )}
-                                </NavigationMenuList>
-                            </NavigationMenu>
-
-                            <AuthButton />
-                        </div>
-
                         <button
-                            className="flex h-10 w-10 items-center justify-center rounded-md border border-black/10 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
+                            className="flex h-10 w-10 items-center justify-center rounded-md border border-black/10 text-gray-700 transition-colors hover:bg-gray-100"
                             onClick={() => setMobileOpen((open) => !open)}
                             aria-label="Toggle menu"
                             aria-expanded={mobileOpen}
@@ -73,35 +44,70 @@ export default function Navbar() {
                             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                         </button>
                     </nav>
-
-                    {mobileOpen && (
-                        <div className="border-t border-black/10 px-4 py-4 md:hidden">
-                            <div className="space-y-2">
-                                <Link
-                                    href="/"
-                                    className="block rounded-md px-3 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                                    onClick={() => setMobileOpen(false)}
-                                >
-                                    Home
-                                </Link>
-                                {session && (
-                                    <Link
-                                        href="/dashboard"
-                                        className="flex items-center gap-2 rounded-md px-3 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900"
-                                        onClick={() => setMobileOpen(false)}
-                                    >
-                                        <LayoutDashboard className="h-4 w-4" />
-                                        Dashboard
-                                    </Link>
-                                )}
-                            </div>
-                            <div className="mt-4 border-t border-black/10 pt-4">
-                                <AuthButton />
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
+
+            {mobileOpen && (
+                <div className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm" onClick={() => setMobileOpen(false)}>
+                    <div className="mx-auto max-w-7xl px-4 pt-4" onClick={(event) => event.stopPropagation()}>
+                        <div className="ml-auto w-full max-w-md overflow-hidden rounded-lg border border-black/10 bg-white shadow-2xl">
+                            <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
+                                <div>
+                                    <p className="text-sm font-medium uppercase tracking-wide text-indigo-600">
+                                        Navigation
+                                    </p>
+                                    <p className="mt-1 text-lg font-bold text-gray-900">
+                                        Code Commit Club
+                                    </p>
+                                </div>
+                                <button
+                                    className="flex h-10 w-10 items-center justify-center rounded-md border border-black/10 text-gray-700 transition-colors hover:bg-gray-100"
+                                    onClick={() => setMobileOpen(false)}
+                                    aria-label="Close menu"
+                                >
+                                    <X className="h-5 w-5" />
+                                </button>
+                            </div>
+
+                            <div className="space-y-6 p-5">
+                                <div className="rounded-lg bg-[#f8fafc] p-4">
+                                    <div className="flex items-center gap-2 text-sm font-medium text-indigo-600">
+                                        <Sparkles className="h-4 w-4" />
+                                        Keep your streak moving
+                                    </div>
+                                    <p className="mt-3 text-sm leading-6 text-gray-600">
+                                        Jump back into your workflow, check your dashboard, and keep the habit alive.
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Link
+                                        href="/"
+                                        className="block rounded-lg border border-black/10 px-4 py-3 font-medium text-gray-800 transition-colors hover:bg-gray-50"
+                                        onClick={() => setMobileOpen(false)}
+                                    >
+                                        Home
+                                    </Link>
+                                    {session && (
+                                        <Link
+                                            href="/dashboard"
+                                            className="flex items-center gap-2 rounded-lg border border-black/10 px-4 py-3 font-medium text-gray-800 transition-colors hover:bg-gray-50"
+                                            onClick={() => setMobileOpen(false)}
+                                        >
+                                            <LayoutDashboard className="h-4 w-4" />
+                                            Dashboard
+                                        </Link>
+                                    )}
+                                </div>
+
+                                <div className="border-t border-black/10 pt-5">
+                                    <AuthButton />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </header>
     )
 }
