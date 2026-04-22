@@ -3,20 +3,53 @@ import {
     CalendarCheck,
     CheckCircle2,
     Flame,
-    Goal,
     Sparkles,
 } from "lucide-react"
 
+import BestCommitTimeCard from "@/components/BestCommitTimeCard"
+import BotStatusCard from "@/components/BotStatusCard"
 import CommitChart from "@/components/CommitChart"
+import CommunityMatchingCard from "@/components/CommunityMatchingCard"
 import Container from "@/components/Container"
+import CustomGoalsCard from "@/components/CustomGoalsCard"
+import DailyChecklist from "@/components/DailyChecklist"
 import GitHubStatsChart from "@/components/GitHubStatsChart"
+import LastCommitCard from "@/components/LastCommitCard"
 import Leaderboard from "@/components/Leaderboard"
 import Navbar from "@/components/Navbar"
 import ProfileCard from "@/components/ProfileCard"
+import RepositoryFocusCard from "@/components/RepositoryFocusCard"
+import ShareLeaderboardCard from "@/components/ShareLeaderboardCard"
+import ShareProgressCard from "@/components/ShareProgressCard"
 import StatsCard from "@/components/StatsCard"
+import StreakHeatmap from "@/components/StreakHeatmap"
+import {
+    filterLeaderboardToDiscordMembers,
+    getDiscordBotStatus,
+    getDiscordCommunityMatching,
+    type DiscordCommunityMatchingResult,
+} from "@/lib/discord"
 import { getGitHubDashboardData } from "@/lib/github"
 import { Card, CardContent } from "@/styleguide/components/ui/card"
 import { auth } from "@/lib/auth"
+
+function buildEmptyHeatmap() {
+    const weeks = 6
+    const days = weeks * 7
+    const startDate = new Date()
+    startDate.setHours(0, 0, 0, 0)
+    startDate.setDate(startDate.getDate() - startDate.getDay() - (weeks - 1) * 7)
+
+    return Array.from({ length: days }, (_, index) => {
+        const date = new Date(startDate)
+        date.setDate(startDate.getDate() + index)
+
+        return {
+            count: 0,
+            date: date.toISOString().slice(0, 10),
+        }
+    })
+}
 
 export default async function DashboardPage() {
     const session = await auth()
@@ -47,16 +80,64 @@ export default async function DashboardPage() {
         { date: "Sun", count: 0 },
     ]
     const recentCommitCount = dashboardData?.recentCommitCount ?? 0
+    const lastCommit = dashboardData?.lastCommit ?? null
     const currentStreak = dashboardData?.currentStreak ?? 0
     const longestStreak = dashboardData?.longestStreak ?? 0
+    const commitHeatmap = dashboardData?.commitHeatmap ?? buildEmptyHeatmap()
+    const commitTimeInsight = dashboardData?.commitTimeInsight ?? {
+        bestWindow: { commits: 0, label: "Morning" },
+        totalCommits: 0,
+        windows: [
+            { commits: 0, label: "Morning" },
+            { commits: 0, label: "Afternoon" },
+            { commits: 0, label: "Evening" },
+            { commits: 0, label: "Late night" },
+        ],
+    }
+    const hasCommitToday = Boolean(commitActivity.at(-1)?.count)
     const repos = dashboardData?.repos ?? []
-    const leaderboard = dashboardData?.topContributors ?? []
+    const topContributors = dashboardData?.topContributors ?? []
+    let leaderboard = topContributors
+    const followingLeaderboard = dashboardData?.followingContributors ?? []
+    let isDiscordLeaderboard = false
+    const discordBotStatus = await getDiscordBotStatus()
+    const hasDiscordShareChannel = Boolean(process.env.DISCORD_CHANNEL_ID)
+    const canShareToDiscord = discordBotStatus.online && hasDiscordShareChannel
+    const discordShareDisabledReason = !hasDiscordShareChannel
+        ? "Add DISCORD_CHANNEL_ID to .env.local, then restart the dev server."
+        : "Connect the Discord bot before sharing."
+    let communityMatching: DiscordCommunityMatchingResult = {
+        configured: discordBotStatus.configured,
+        githubContributorCount: topContributors.length,
+        matchedContributors: [],
+        matchedMemberCount: 0,
+        totalMemberCount: discordBotStatus.memberCount ?? 0,
+        unmatchedMembers: [],
+    }
+
+    try {
+        communityMatching = await getDiscordCommunityMatching(topContributors)
+    } catch (error) {
+        console.error("Failed to load Discord community matching", error)
+    }
+
+    if (leaderboard.length > 0) {
+        try {
+            const discordLeaderboard = await filterLeaderboardToDiscordMembers(leaderboard)
+            leaderboard = discordLeaderboard.contributors
+            isDiscordLeaderboard = discordLeaderboard.configured
+        } catch (error) {
+            console.error("Failed to load Discord community leaderboard", error)
+        }
+    }
     const topRepo = repos[0]
-    const goals = [
-        { label: "Daily commit", current: commitActivity.at(-1)?.count ? 1 : 0, target: 1 },
-        { label: "Weekly commits", current: recentCommitCount, target: 7 },
-        { label: "Active repos", current: repos.length, target: Math.max(repos.length || 1, 3) },
-    ]
+    const contributorWin = leaderboard[0]
+        ? `Top contributor right now is @${leaderboard[0].username}`
+        : followingLeaderboard[0]
+            ? `Most active followed developer is @${followingLeaderboard[0].username}`
+            : isDiscordLeaderboard
+                ? "Discord community rankings will appear once a member matches repo data"
+                : "Contributor rankings will appear once repo data loads"
     const wins = [
         currentStreak > 0
             ? `Committed on ${currentStreak} straight day${currentStreak === 1 ? "" : "s"}`
@@ -64,9 +145,7 @@ export default async function DashboardPage() {
         topRepo
             ? `${topRepo.name} is your most recently pushed repo`
             : "Connect GitHub data to surface your active repositories",
-        leaderboard[0]
-            ? `Top contributor right now is @${leaderboard[0].username}`
-            : "Contributor rankings will appear once repo data loads",
+        contributorWin,
     ]
     const stats = {
         followers: profile?.followers ?? 0,
@@ -146,58 +225,59 @@ export default async function DashboardPage() {
                     </Card>
                 </section>
 
-                <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
                     <StatsCard label="Recent commits" value={recentCommitCount} detail="Last 7 days" />
                     <StatsCard label="Current streak" value={`${currentStreak} day${currentStreak === 1 ? "" : "s"}`} detail="Days with commits" />
                     <StatsCard label="Longest streak" value={`${longestStreak} day${longestStreak === 1 ? "" : "s"}`} detail="Within this week" />
                     <StatsCard label="Repositories" value={repos.length} detail="Tracked from GitHub" />
+                    <StatsCard label="GitHub followers" value={profile?.followers ?? 0} detail="Following your profile" />
+                    <StatsCard label="Discord members" value={discordBotStatus.memberCount ?? 0} detail="CodeStreak server" />
                 </section>
 
-                <section className="mt-6 grid gap-6 xl:grid-cols-[1.4fr_0.8fr]">
+                <section className="mt-6">
+                    <DailyChecklist hasCommitToday={hasCommitToday} />
+                </section>
+
+                <section className="mt-6 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
+                    <RepositoryFocusCard repos={repos} />
+                    <LastCommitCard commit={lastCommit} />
+                </section>
+
+                <section className="mt-6">
+                    <StreakHeatmap data={commitHeatmap} />
+                </section>
+
+                <section className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr_0.8fr]">
                     <CommitChart data={commitActivity} />
 
-                    <Card className="rounded-lg border-[#d9e2ec] bg-white p-0 shadow-sm">
-                        <CardContent className="space-y-6 p-6">
-                            <div className="flex items-center justify-between gap-4">
-                                <div>
-                                    <p className="text-sm font-medium uppercase text-[#52606d]">Goals</p>
-                                    <h2 className="mt-1 text-2xl font-bold">Progress</h2>
-                                </div>
-                                <Goal className="h-8 w-8 text-[#0f766e]" />
-                            </div>
+                    <CustomGoalsCard
+                        activeRepoCount={repos.length}
+                        hasCommitToday={hasCommitToday}
+                        recentCommitCount={recentCommitCount}
+                    />
 
-                            <div className="space-y-5">
-                                {goals.map((goal) => {
-                                    const progress = Math.min((goal.current / goal.target) * 100, 100)
-
-                                    return (
-                                        <div key={goal.label}>
-                                            <div className="flex items-center justify-between gap-4 text-sm">
-                                                <span className="font-medium">{goal.label}</span>
-                                                <span className="text-[#52606d]">
-                                                    {goal.current}/{goal.target}
-                                                </span>
-                                            </div>
-                                            <div className="mt-2 h-3 overflow-hidden rounded-md bg-[#e5e7eb]">
-                                                <div
-                                                    className="h-full rounded-md bg-[#f97316]"
-                                                    style={{ width: `${progress}%` }}
-                                                />
-                                            </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <BotStatusCard status={discordBotStatus} />
                 </section>
 
-                <section className="mt-6 grid gap-6 lg:grid-cols-2">
-                    <GitHubStatsChart fallbackStats={stats} />
-                    <Leaderboard data={leaderboard} />
+                <section className="mt-6 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+                    <div className="grid gap-6">
+                        <BestCommitTimeCard insight={commitTimeInsight} />
+                        <GitHubStatsChart fallbackStats={stats} />
+                    </div>
+                    <div className="grid gap-6">
+                        <CommunityMatchingCard matching={communityMatching} />
+                        <Leaderboard data={leaderboard} isDiscordFiltered={isDiscordLeaderboard} />
+                        <Leaderboard
+                            badgeText="Following"
+                            data={followingLeaderboard}
+                            emptyMessage="No recent public push activity from people you follow."
+                            eyebrow="GitHub following"
+                            title="People you follow"
+                        />
+                    </div>
                 </section>
 
-                <section className="mt-6 grid gap-4 sm:grid-cols-3">
+                <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <div className="flex items-center gap-3 rounded-lg border border-[#d9e2ec] bg-white p-5 shadow-sm">
                         <Flame className="h-8 w-8 text-[#f97316]" />
                         <div>
@@ -205,7 +285,18 @@ export default async function DashboardPage() {
                             <p className="text-sm text-[#52606d]">One commit keeps the flame lit.</p>
                         </div>
                     </div>
-                    <div className="rounded-lg border border-[#d9e2ec] bg-white p-5 shadow-sm sm:col-span-2">
+
+                    <ShareProgressCard
+                        disabled={!canShareToDiscord}
+                        disabledReason={discordShareDisabledReason}
+                    />
+
+                    <ShareLeaderboardCard
+                        disabled={!canShareToDiscord}
+                        disabledReason={discordShareDisabledReason}
+                    />
+
+                    <div className="rounded-lg border border-[#d9e2ec] bg-white p-5 shadow-sm">
                         <p className="text-sm font-medium uppercase text-[#52606d]">Next move</p>
                         <p className="mt-2 text-xl font-bold">
                             Pick a small fix, write the test, and commit before your focus window.
