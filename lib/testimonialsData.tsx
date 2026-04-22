@@ -3,7 +3,7 @@ import type { Testimonial } from "../components/testimonialsCard"
 
 export const testimonials: Testimonial[] = [
     {
-        quote: "Joining Code Commit Club transformed how I code daily. The streaks keep me accountable!",
+        quote: "Joining CodeStreak transformed how I code daily. The streaks keep me accountable!",
         name: "Alex Johnson",
         role: "Full-Stack Engineer",
         avatar: "/person(1).png",

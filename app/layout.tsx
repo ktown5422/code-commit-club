@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Code Commit Club",
+  title: "CodeStreak",
   description: "A platform to track and improve your coding habits.",
 };
 

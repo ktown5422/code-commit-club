@@ -62,7 +62,7 @@ export default function HomePage() {
                   Code every day with a community that keeps you moving.
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-gray-600">
-                  Code Commit Club helps developers stay consistent, protect their streaks,
+                  CodeStreak helps developers stay consistent, protect their streaks,
                   and turn small daily commits into a lasting practice.
                 </p>
               </div>
@@ -105,8 +105,8 @@ export default function HomePage() {
               <div className="relative min-h-[380px] overflow-hidden rounded-lg bg-[#111827] p-6 text-white shadow-2xl">
                 <div className="absolute inset-0">
                   <Image
-                    src="/Code-Commit-Club-Logo.png"
-                    alt="Code Commit Club Logo"
+                    src="/CodeStreak-Logo.png"
+                    alt="CodeStreak Logo"
                     fill
                     sizes="(min-width: 1024px) 40vw, 100vw"
                     className="object-cover opacity-20"
@@ -267,7 +267,7 @@ export default function HomePage() {
               </div>
 
               <p className="text-lg leading-8 text-gray-700">
-                <strong>Kevin Townson</strong> created Code Commit Club to help developers build
+                <strong>Kevin Townson</strong> created CodeStreak to help developers build
                 stronger habits through visible daily progress, shared momentum, and a community that
                 makes it easier to keep going.
               </p>

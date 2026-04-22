@@ -59,7 +59,7 @@ export default function Footer() {
                     <div className="grid gap-12 lg:grid-cols-[1.1fr_0.7fr_0.7fr_1fr]">
                         <div className="max-w-md">
                             <Link href="/" className="text-xl font-bold text-gray-900">
-                                Code Commit Club
+                                CodeStreak
                             </Link>
                             <p className="mt-4 text-lg leading-8 text-gray-600">
                                 A steady place for developers building consistency through daily
@@ -127,7 +127,7 @@ export default function Footer() {
 
             <div className="border-t border-black/5 bg-white">
                 <Container className="flex flex-col gap-2 py-5 text-sm text-gray-500 md:flex-row md:items-center md:justify-between">
-                    <p>&copy; {new Date().getFullYear()} Code Commit Club. All rights reserved.</p>
+                    <p>&copy; {new Date().getFullYear()} CodeStreak. All rights reserved.</p>
                     <p>Show up, push code, keep going.</p>
                 </Container>
             </div>

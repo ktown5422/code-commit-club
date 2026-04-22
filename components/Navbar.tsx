@@ -19,15 +19,15 @@ export default function Navbar() {
                     <nav className="flex items-center justify-between px-4 py-3 sm:px-5">
                         <Link href="/" className="flex min-w-0 items-center gap-3">
                             <Image
-                                src="/Code-Commit-Club-Logo.png"
-                                alt="Code Commit Club Logo"
+                                src="/CodeStreak-Logo.png"
+                                alt="CodeStreak Logo"
                                 width={36}
                                 height={36}
                                 className="rounded-md"
                             />
                             <div className="min-w-0">
                                 <span className="block truncate text-base font-bold text-gray-900 sm:text-lg">
-                                    Code Commit Club
+                                    CodeStreak
                                 </span>
                                 <span className="hidden text-xs text-gray-500 sm:block">
                                     Daily commits, lasting habits
@@ -57,7 +57,7 @@ export default function Navbar() {
                                         Navigation
                                     </p>
                                     <p className="mt-1 text-lg font-bold text-gray-900">
-                                        Code Commit Club
+                                        CodeStreak
                                     </p>
                                 </div>
                                 <button
