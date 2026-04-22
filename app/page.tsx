@@ -58,7 +58,7 @@ export default function HomePage() {
               </div>
 
               <div className="space-y-5">
-                <h1 className="max-w-3xl text-4xl font-extrabold leading-tight md:text-5xl lg:text-6xl">
+                <h1 className="max-w-3xl text-4xl font-extrabold leading-tight md:text-5xl lg:text-7xl">
                   Code every day with a community that keeps you moving.
                 </h1>
                 <p className="max-w-2xl text-lg leading-8 text-gray-600">
