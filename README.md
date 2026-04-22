@@ -1,4 +1,4 @@
-# Code Commit Club
+# CodeStreak
 
 ![Next.js](https://img.shields.io/badge/Next.js-15-black?style=for-the-badge&logo=next.js)
 ![React](https://img.shields.io/badge/React-19-149ECA?style=for-the-badge&logo=react)
@@ -7,7 +7,7 @@
 ![NextAuth](https://img.shields.io/badge/Auth-GitHub-181717?style=for-the-badge&logo=github)
 ![Octokit](https://img.shields.io/badge/API-Octokit-6E40C9?style=for-the-badge&logo=github)
 
-Code Commit Club is a modern GitHub habit tracker built with Next.js. It helps developers stay consistent by turning daily commits into visible progress, streaks, profile insights, contributor data, and leaderboard momentum.
+CodeStreak is a modern GitHub habit tracker built with Next.js. It helps developers stay consistent by turning daily commits into visible progress, streaks, profile insights, contributor data, and leaderboard momentum.
 
 ## Overview
 
@@ -39,6 +39,9 @@ The app currently includes:
 - contributor leaderboard
 - repository-aware GitHub stats
 - responsive landing page, navbar, dashboard, and footer
+- daily checklist, repository focus mode, and customizable goals
+- best commit time insight
+- Discord progress and leaderboard sharing
 
 ## Getting Started
 
@@ -64,6 +67,10 @@ Create a `.env.local` file in the project root and add:
 AUTH_SECRET="your-random-secret"
 AUTH_GITHUB_ID="your-github-oauth-app-client-id"
 AUTH_GITHUB_SECRET="your-github-oauth-app-client-secret"
+DISCORD_BOT_TOKEN="your-discord-bot-token"
+DISCORD_GUILD_ID="your-discord-server-id"
+DISCORD_CHANNEL_ID="your-discord-channel-id"
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
 For local development, your GitHub OAuth app callback URL should be:
@@ -77,6 +84,14 @@ An example file is included here:
 ```text
 .env.example
 ```
+
+The Discord variables are optional. When they are present, the dashboard filters the top contributors leaderboard to members of that Discord server. The Discord bot needs access to list guild members, including the Server Members Intent for larger/member-gated servers. Discord members are matched against GitHub contributors by comparing the contributor username to the member username, global display name, server nickname, or an `@github-handle` inside the display name or nickname.
+
+When Discord is configured, the dashboard also shows a CodeStreak Bot status card with the bot connection state, server name, and visible member count. The bot token is only used on the server and is never sent to the browser.
+
+Add `DISCORD_CHANNEL_ID` to enable the dashboard's Discord sharing actions. The bot needs `View Channel`, `Send Messages`, and `Embed Links` permissions in that channel. Shared progress and leaderboard posts link back to `NEXT_PUBLIC_APP_URL`.
+
+The dashboard also shows recent public push activity from people the signed-in GitHub user follows. This is based on public GitHub events, so private commits and hidden contribution activity are not included.
 
 ## Available Scripts
 
@@ -113,7 +128,10 @@ The dashboard uses Octokit to power GitHub-aware views, including:
 - contributor lists
 - commit counts
 - commit activity summaries
+- best commit time analysis
 - leaderboard aggregation
+- public push activity from people the signed-in user follows
+- optional Discord community filtering for the contributor leaderboard
 
 The main GitHub service lives in:
 
