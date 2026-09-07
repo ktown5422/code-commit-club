@@ -1,3 +1,5 @@
+import { cache } from "react"
+
 import type { GitHubContributor } from "@/lib/github"
 
 const DISCORD_API_BASE = "https://discord.com/api/v10"
@@ -170,7 +172,7 @@ function getMemberDisplayName(member: DiscordGuildMember) {
         ?? "Unknown member"
 }
 
-async function getDiscordGuildMembers() {
+const getDiscordGuildMembers = cache(async () => {
     const config = getDiscordConfig()
 
     if (!config) {
@@ -208,7 +210,7 @@ async function getDiscordGuildMembers() {
     }
 
     return members
-}
+})
 
 export async function getDiscordBotStatus(): Promise<DiscordBotStatus> {
     const config = getDiscordConfig()
@@ -222,11 +224,11 @@ export async function getDiscordBotStatus(): Promise<DiscordBotStatus> {
     }
 
     try {
-        const botUser = await discordRequest<DiscordUser>("/users/@me")
-        const guild = await discordRequest<DiscordGuild>(
-            `/guilds/${config.guildId}?with_counts=true`
-        )
-        const members = await getDiscordGuildMembers()
+        const [botUser, guild, members] = await Promise.all([
+            discordRequest<DiscordUser>("/users/@me"),
+            discordRequest<DiscordGuild>(`/guilds/${config.guildId}?with_counts=true`),
+            getDiscordGuildMembers(),
+        ])
 
         return {
             botName: botUser?.username,
@@ -317,6 +319,134 @@ export async function getDiscordCommunityMatching(
         totalMemberCount: members.length,
         unmatchedMembers,
     }
+}
+
+export interface DiscordAccountabilityMember {
+    discordId: string
+    displayName: string
+    githubHandle?: string
+}
+
+export interface DiscordAccountabilityPairing {
+    configured: boolean
+    pairs: Array<{ a: DiscordAccountabilityMember; b: DiscordAccountabilityMember }>
+    unpaired?: DiscordAccountabilityMember
+    weekKey: string
+}
+
+function getWeekKey(date = new Date()) {
+    const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
+    const dayNumber = (target.getUTCDay() + 6) % 7
+    target.setUTCDate(target.getUTCDate() - dayNumber + 3)
+    const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4))
+    const week = 1 + Math.round(
+        ((target.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7
+    )
+
+    return `${target.getUTCFullYear()}-W${week}`
+}
+
+function hashSeed(value: string) {
+    let hash = 5381
+
+    for (let index = 0; index < value.length; index += 1) {
+        hash = ((hash << 5) + hash + value.charCodeAt(index)) | 0
+    }
+
+    return hash >>> 0
+}
+
+function seededShuffle<T>(items: T[], seed: string, getKey: (item: T) => string) {
+    return [...items].sort((a, b) => hashSeed(`${seed}:${getKey(a)}`) - hashSeed(`${seed}:${getKey(b)}`))
+}
+
+export async function getAccountabilityPairing(
+    contributors: GitHubContributor[],
+    referenceDate = new Date()
+): Promise<DiscordAccountabilityPairing> {
+    const weekKey = getWeekKey(referenceDate)
+    const members = await getDiscordGuildMembers()
+
+    if (!members) {
+        return { configured: false, pairs: [], weekKey }
+    }
+
+    const contributorHandles = new Set(
+        contributors.map((contributor) => normalizeHandle(contributor.username))
+    )
+
+    const activeMembers: DiscordAccountabilityMember[] = members
+        .filter((member) => member.user?.id)
+        .map((member) => {
+            const aliases = collectMemberAliases(member)
+            const githubHandle = aliases.find((alias) => contributorHandles.has(alias))
+
+            return {
+                discordId: member.user!.id,
+                displayName: getMemberDisplayName(member),
+                githubHandle,
+            }
+        })
+        .filter((member) => member.githubHandle)
+
+    const shuffled = seededShuffle(activeMembers, weekKey, (member) => member.discordId)
+    const pairs: DiscordAccountabilityPairing["pairs"] = []
+
+    for (let index = 0; index + 1 < shuffled.length; index += 2) {
+        pairs.push({ a: shuffled[index], b: shuffled[index + 1] })
+    }
+
+    const unpaired = shuffled.length % 2 === 1 ? shuffled[shuffled.length - 1] : undefined
+
+    return { configured: true, pairs, unpaired, weekKey }
+}
+
+export async function announceAccountabilityPairing(pairing: DiscordAccountabilityPairing) {
+    const appUrl = getAppUrl()
+
+    if (pairing.pairs.length === 0) {
+        throw new Error("Not enough matched members yet to form accountability pairs.")
+    }
+
+    const pairLines = pairing.pairs.map(
+        (pair) => `<@${pair.a.discordId}> + <@${pair.b.discordId}>`
+    )
+
+    if (pairing.unpaired) {
+        pairLines.push(`<@${pairing.unpaired.discordId}> is on standby for next week's pairing.`)
+    }
+
+    return sendDiscordChannelMessage({
+        content: "New CodeStreak accountability pairs are up for this week.",
+        embeds: [
+            {
+                color: 0x0f766e,
+                description: pairLines.join("\n"),
+                fields: [
+                    {
+                        inline: false,
+                        name: "How it works",
+                        value: "Check in with your partner a few times this week and keep each other's streak alive.",
+                    },
+                ],
+                title: `Accountability pairs - week ${pairing.weekKey}`,
+                url: appUrl,
+            },
+        ],
+        components: [
+            {
+                type: 1,
+                components: [
+                    {
+                        type: 2,
+                        style: 5,
+                        label: "Open CodeStreak",
+                        url: appUrl,
+                    },
+                ],
+            },
+        ],
+    })
 }
 
 interface ShareProgressInput {

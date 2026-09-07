@@ -53,6 +53,11 @@ export interface CommitHeatmapDay {
     date: string
 }
 
+export interface ContributionDay {
+    count: number
+    date: string
+}
+
 export interface CommitTimeWindow {
     commits: number
     label: string
@@ -80,6 +85,52 @@ export interface GitHubDashboardData {
 
 function createOctokit(accessToken: string) {
     return new Octokit({ auth: accessToken })
+}
+
+interface ContributionCalendarQuery {
+    viewer: {
+        contributionsCollection: {
+            contributionCalendar: {
+                weeks: Array<{
+                    contributionDays: Array<{
+                        contributionCount: number
+                        date: string
+                    }>
+                }>
+            }
+        }
+        login: string
+    }
+}
+
+export async function getContributionCalendar(
+    accessToken: string
+): Promise<{ days: ContributionDay[]; login: string }> {
+    const octokit = createOctokit(accessToken)
+    const response = await octokit.graphql<ContributionCalendarQuery>(`
+        query {
+            viewer {
+                login
+                contributionsCollection {
+                    contributionCalendar {
+                        weeks {
+                            contributionDays {
+                                contributionCount
+                                date
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    `)
+
+    const days = response.viewer.contributionsCollection.contributionCalendar.weeks
+        .flatMap((week) => week.contributionDays)
+        .map((day) => ({ count: day.contributionCount, date: day.date }))
+        .sort((left, right) => left.date.localeCompare(right.date))
+
+    return { days, login: response.viewer.login }
 }
 
 export async function getViewerRepos(accessToken: string): Promise<GitHubRepoSummary[]> {
@@ -198,7 +249,7 @@ export async function getLatestUserCommit(
 
     return latestCommits
         .filter((commit): commit is LastCommitInfo => Boolean(commit))
-        .sort((left, right) => +new Date(right.date) - +new Date(left.date))[0] ?? null
+        .sort((left, right) => Date.parse(right.date) - Date.parse(left.date))[0] ?? null
 }
 
 export async function buildLeaderboard(
@@ -255,7 +306,7 @@ export async function buildFollowingLeaderboard(
         per_page: MAX_FOLLOWING_TO_CHECK,
         username,
     })
-    const sinceTime = +new Date(since)
+    const sinceTime = Date.parse(since)
 
     const followedContributors = await Promise.all(
         following.map(async (user) => {
@@ -311,54 +362,35 @@ function formatDayLabel(date: Date) {
     return date.toLocaleDateString("en-US", { weekday: "short" })
 }
 
-function buildActivitySeries(commitDates: string[]) {
+function buildActivitySeries(contributionDays: ContributionDay[]): CommitActivityPoint[] {
+    const countsByDate = new Map(contributionDays.map((day) => [day.date, day.count]))
     const today = new Date()
-    const buckets = Array.from({ length: RECENT_DAYS }, (_, index) => {
+
+    return Array.from({ length: RECENT_DAYS }, (_, index) => {
         const date = new Date(today)
         date.setDate(today.getDate() - (RECENT_DAYS - index - 1))
 
         return {
-            count: 0,
+            count: countsByDate.get(formatDateKey(date)) ?? 0,
             date: formatDayLabel(date),
-            key: formatDateKey(date),
         }
     })
-
-    for (const commitDate of commitDates) {
-        const key = formatDateKey(new Date(commitDate))
-        const bucket = buckets.find((entry) => entry.key === key)
-
-        if (bucket) {
-            bucket.count += 1
-        }
-    }
-
-    return buckets.map(({ count, date }) => ({ count, date }))
 }
 
-function buildHeatmapSeries(commitDates: string[]) {
+function buildHeatmapSeries(contributionDays: ContributionDay[]): CommitHeatmapDay[] {
+    const countsByDate = new Map(contributionDays.map((day) => [day.date, day.count]))
     const startDate = getHeatmapStartDate()
-    const buckets = Array.from({ length: HEATMAP_DAYS }, (_, index) => {
+
+    return Array.from({ length: HEATMAP_DAYS }, (_, index) => {
         const date = new Date(startDate)
         date.setDate(startDate.getDate() + index)
+        const key = formatDateKey(date)
 
         return {
-            count: 0,
-            date: formatDateKey(date),
+            count: countsByDate.get(key) ?? 0,
+            date: key,
         }
     })
-    const bucketMap = new Map(buckets.map((bucket) => [bucket.date, bucket]))
-
-    for (const commitDate of commitDates) {
-        const key = formatDateKey(new Date(commitDate))
-        const bucket = bucketMap.get(key)
-
-        if (bucket) {
-            bucket.count += 1
-        }
-    }
-
-    return buckets
 }
 
 function getTimeWindowLabel(date: Date) {
@@ -386,10 +418,11 @@ function buildCommitTimeInsight(commitDates: string[]): CommitTimeInsight {
         { commits: 0, label: "Evening" },
         { commits: 0, label: "Late night" },
     ]
+    const windowMap = new Map(windows.map((window) => [window.label, window]))
 
     for (const commitDate of commitDates) {
         const label = getTimeWindowLabel(new Date(commitDate))
-        const window = windows.find((entry) => entry.label === label)
+        const window = windowMap.get(label)
 
         if (window) {
             window.commits += 1
@@ -403,78 +436,90 @@ function buildCommitTimeInsight(commitDates: string[]): CommitTimeInsight {
     }
 }
 
-function calculateCurrentStreak(activity: CommitActivityPoint[]) {
-    let streak = 0
+export function calculateStreaks(contributionDays: ContributionDay[]) {
+    const todayKey = formatDateKey(new Date())
+    let longest = 0
+    let run = 0
 
-    for (let index = activity.length - 1; index >= 0; index -= 1) {
-        if (activity[index].count > 0) {
-            streak += 1
+    for (const day of contributionDays) {
+        if (day.date > todayKey) {
+            break
+        }
+
+        if (day.count > 0) {
+            run += 1
+            longest = Math.max(longest, run)
             continue
         }
 
-        break
+        run = 0
     }
 
-    return streak
-}
+    let index = contributionDays.length - 1
 
-function calculateLongestStreak(activity: CommitActivityPoint[]) {
-    let longest = 0
+    while (index >= 0 && contributionDays[index].date > todayKey) {
+        index -= 1
+    }
+
+    // Today isn't over yet — an empty today pauses the streak instead of breaking it.
+    if (index >= 0 && contributionDays[index].date === todayKey && contributionDays[index].count === 0) {
+        index -= 1
+    }
+
     let current = 0
 
-    for (const day of activity) {
-        if (day.count > 0) {
-            current += 1
-            longest = Math.max(longest, current)
-            continue
+    for (; index >= 0; index -= 1) {
+        if (contributionDays[index].count === 0) {
+            break
         }
 
-        current = 0
+        current += 1
     }
 
-    return longest
+    return { current, longest: Math.max(longest, current) }
 }
 
 export async function getGitHubDashboardData(accessToken: string): Promise<GitHubDashboardData> {
-    const repos = (await getViewerRepos(accessToken))
-        .sort((left, right) => +new Date(right.pushedAt) - +new Date(left.pushedAt))
+    const [allRepos, calendar] = await Promise.all([
+        getViewerRepos(accessToken),
+        getContributionCalendar(accessToken),
+    ])
+    const repos = allRepos
+        .sort((left, right) => Date.parse(right.pushedAt) - Date.parse(left.pushedAt))
         .slice(0, MAX_REPOS)
 
-    const profile = await getProfileInfo(accessToken, repos)
     const heatmapSince = getHeatmapStartDate().toISOString()
     const recentSince = getRecentDate(RECENT_DAYS - 1).toISOString()
 
-    const commitDates = (
-        await Promise.all(
+    const [profile, commitDatesByRepo, lastCommit, topContributors, followingContributors] = await Promise.all([
+        getProfileInfo(accessToken, allRepos),
+        Promise.all(
             repos.map((repo) =>
-                getUserCommitActivity(accessToken, repo.owner, repo.name, profile.login, heatmapSince)
+                getUserCommitActivity(accessToken, repo.owner, repo.name, calendar.login, heatmapSince)
             )
-        )
-    ).flat()
+        ),
+        getLatestUserCommit(accessToken, repos, calendar.login),
+        buildLeaderboard(accessToken, repos),
+        buildFollowingLeaderboard(accessToken, calendar.login, recentSince).catch((error) => {
+            console.error("Failed to build GitHub following leaderboard", error)
+            return [] as GitHubContributor[]
+        }),
+    ])
 
-    const commitActivity = buildActivitySeries(commitDates)
-    const commitHeatmap = buildHeatmapSeries(commitDates)
-    const commitTimeInsight = buildCommitTimeInsight(commitDates)
-    const lastCommit = await getLatestUserCommit(accessToken, repos, profile.login)
-    const topContributors = await buildLeaderboard(accessToken, repos)
-    let followingContributors: GitHubContributor[] = []
-
-    try {
-        followingContributors = await buildFollowingLeaderboard(accessToken, profile.login, recentSince)
-    } catch (error) {
-        console.error("Failed to build GitHub following leaderboard", error)
-    }
+    const commitDates = commitDatesByRepo.flat()
+    const commitActivity = buildActivitySeries(calendar.days)
+    const streaks = calculateStreaks(calendar.days)
 
     return {
         commitActivity,
-        commitHeatmap,
-        commitTimeInsight,
-        currentStreak: calculateCurrentStreak(commitActivity),
+        commitHeatmap: buildHeatmapSeries(calendar.days),
+        commitTimeInsight: buildCommitTimeInsight(commitDates),
+        currentStreak: streaks.current,
         followingContributors,
         lastCommit,
-        longestStreak: calculateLongestStreak(commitActivity),
+        longestStreak: streaks.longest,
         profile,
-        recentCommitCount: commitDates.length,
+        recentCommitCount: commitActivity.reduce((total, day) => total + day.count, 0),
         repos,
         topContributors,
     }
