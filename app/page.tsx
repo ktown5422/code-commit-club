@@ -11,8 +11,6 @@ import { Button } from "../styleguide/components/ui/button"
 import Container from "@/components/Container"
 import Navbar from "@/components/Navbar"
 import Footer from "@/components/Footer"
-import TestimonialCard from "@/components/testimonialsCard"
-import { testimonials } from "@/lib/testimonialsData"
 
 const highlights = [
   {
@@ -201,38 +199,6 @@ export default function HomePage() {
                 </motion.div>
               )
             })}
-          </div>
-        </Container>
-      </section>
-
-      <section className="border-y border-black/5 bg-gray-50 py-20">
-        <Container>
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="text-sm font-medium uppercase tracking-wide text-indigo-600">
-                Member voices
-              </p>
-              <h2 className="mt-3 text-3xl font-bold text-gray-900 md:text-4xl">
-                Real momentum, not just motivation.
-              </h2>
-            </div>
-            <p className="max-w-xl text-lg leading-8 text-gray-600">
-              Developers stick around because steady progress feels better with other people in it.
-            </p>
-          </div>
-
-          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.3 }}
-                transition={{ delay: i * 0.14, duration: 0.5 }}
-              >
-                <TestimonialCard {...t} />
-              </motion.div>
-            ))}
           </div>
         </Container>
       </section>
