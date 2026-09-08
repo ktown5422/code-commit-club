@@ -13,9 +13,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://codestreakapp.vercel.app";
+const description =
+  "Turn daily GitHub commits into visible streaks, habit insights, and shared momentum with your Discord community.";
+
 export const metadata: Metadata = {
-  title: "CodeStreak",
-  description: "A platform to track and improve your coding habits.",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "CodeStreak — build the habit one commit at a time",
+    template: "%s · CodeStreak",
+  },
+  description,
+  keywords: ["GitHub", "commit streak", "developer habits", "Discord", "Next.js"],
+  authors: [{ name: "Kevin Townson" }],
+  creator: "Kevin Townson",
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    siteName: "CodeStreak",
+    title: "CodeStreak — build the habit one commit at a time",
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CodeStreak — build the habit one commit at a time",
+    description,
+  },
 };
 
 export default function RootLayout({

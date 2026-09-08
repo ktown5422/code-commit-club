@@ -35,8 +35,29 @@ export default function Navbar() {
                             </div>
                         </Link>
 
+                        <div className="hidden items-center gap-2 md:flex">
+                            <Link
+                                href="/"
+                                className="rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                            >
+                                Home
+                            </Link>
+                            {session && (
+                                <Link
+                                    href="/dashboard"
+                                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
+                                >
+                                    <LayoutDashboard className="h-4 w-4" />
+                                    Dashboard
+                                </Link>
+                            )}
+                            <div className="ml-1">
+                                <AuthButton />
+                            </div>
+                        </div>
+
                         <button
-                            className="flex h-10 w-10 items-center justify-center rounded-md border border-black/10 text-gray-700 transition-colors hover:bg-gray-100"
+                            className="flex h-10 w-10 items-center justify-center rounded-md border border-black/10 text-gray-700 transition-colors hover:bg-gray-100 md:hidden"
                             onClick={() => setMobileOpen((open) => !open)}
                             aria-label="Toggle menu"
                             aria-expanded={mobileOpen}
@@ -48,7 +69,7 @@ export default function Navbar() {
             </div>
 
             {mobileOpen && (
-                <div className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm" onClick={() => setMobileOpen(false)}>
+                <div className="fixed inset-0 z-30 bg-black/20 backdrop-blur-sm md:hidden" onClick={() => setMobileOpen(false)}>
                     <div className="mx-auto max-w-7xl px-4 pt-4" onClick={(event) => event.stopPropagation()}>
                         <div className="ml-auto w-full max-w-md overflow-hidden rounded-lg border border-black/10 bg-white shadow-2xl">
                             <div className="flex items-center justify-between border-b border-black/10 px-5 py-4">
