@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { BsDiscord } from "react-icons/bs"
 import { FaGripfire } from "react-icons/fa"
 import { ArrowRight, CalendarDays, GitCommitHorizontal, Trophy, Users } from "lucide-react"
@@ -31,12 +31,35 @@ const highlights = [
 ]
 
 const stats = [
-  { label: "Daily check-ins", value: "7 days" },
-  { label: "Best commit window", value: "9 PM" },
-  { label: "Community energy", value: "Always on" },
+  { label: "Tracks", value: "7-day activity" },
+  { label: "Surfaces", value: "Your best hours" },
+  { label: "Connects", value: "GitHub + Discord" },
 ]
 
 export default function HomePage() {
+  const reduceMotion = useReducedMotion()
+
+  // When the visitor asks for reduced motion, content renders in place rather than
+  // fading up from opacity 0 — which also means it never depends on an animation finishing.
+  const onLoad = (options: { delay?: number; y?: number } = {}) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: options.y ?? 24 },
+          animate: { opacity: 1, y: 0 },
+          transition: { delay: options.delay ?? 0, duration: 0.7 },
+        }
+
+  const onScroll = (options: { delay?: number; duration?: number; y?: number } = {}) =>
+    reduceMotion
+      ? {}
+      : {
+          initial: { opacity: 0, y: options.y ?? 20 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, amount: 0.3 },
+          transition: { delay: options.delay ?? 0, duration: options.duration ?? 0.6 },
+        }
+
   return (
     <main className="bg-white text-black">
       <section className="border-b border-black/5 bg-[#f8fafc] text-black">
@@ -44,12 +67,7 @@ export default function HomePage() {
 
         <Container className="pt-28 pb-16 md:pt-32 md:pb-20">
           <div className="grid items-end gap-12 lg:grid-cols-[1.05fr_0.95fr]">
-            <motion.div
-              initial={{ opacity: 0, y: 32 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7 }}
-              className="space-y-8"
-            >
+            <motion.div {...onLoad({ y: 32 })} className="space-y-8">
               <div className="inline-flex items-center gap-2 rounded-md border border-indigo-200 bg-white px-3 py-1 text-sm font-medium text-indigo-700">
                 <FaGripfire className="h-4 w-4" />
                 Build the habit one commit at a time
@@ -94,10 +112,7 @@ export default function HomePage() {
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15, duration: 0.7 }}
+            <motion.div {...onLoad({ delay: 0.15 })}
               className="grid gap-4"
             >
               <div className="relative min-h-[380px] overflow-hidden rounded-lg bg-[#111827] p-6 text-white shadow-2xl">
@@ -185,10 +200,7 @@ export default function HomePage() {
               return (
                 <motion.div
                   key={item.title}
-                  initial={{ opacity: 0, y: 24 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ delay: index * 0.12, duration: 0.5 }}
+                  {...onScroll({ delay: index * 0.12, duration: 0.5, y: 24 })}
                   className="rounded-lg border border-gray-200 bg-white p-8 shadow-sm"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
@@ -206,10 +218,7 @@ export default function HomePage() {
       <section className="py-20">
         <Container>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ duration: 0.6 }}
+            {...onScroll()}
             className="grid gap-10 lg:grid-cols-[280px_1fr] lg:items-center"
           >
             <div className="mx-auto w-full max-w-[280px] overflow-hidden rounded-lg bg-gray-100 shadow-lg">
