@@ -411,7 +411,7 @@ function getTimeWindowLabel(date: Date) {
     return "Late night"
 }
 
-function buildCommitTimeInsight(commitDates: string[]): CommitTimeInsight {
+export function buildCommitTimeInsight(commitDates: string[]): CommitTimeInsight {
     const windows: CommitTimeWindow[] = [
         { commits: 0, label: "Morning" },
         { commits: 0, label: "Afternoon" },

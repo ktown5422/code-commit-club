@@ -138,7 +138,7 @@ async function sendDiscordChannelMessage(payload: DiscordMessagePayload) {
     return response.json()
 }
 
-function normalizeHandle(value: string) {
+export function normalizeHandle(value: string) {
     return value
         .trim()
         .replace(/^@/, "")
@@ -154,7 +154,7 @@ function getPossibleGitHubHandles(value: string) {
     return [directHandle, ...mentionedHandles].filter(Boolean)
 }
 
-function collectMemberAliases(member: DiscordGuildMember) {
+export function collectMemberAliases(member: DiscordGuildMember) {
     return [
         member.user?.username,
         member.user?.global_name,
@@ -334,7 +334,7 @@ export interface DiscordAccountabilityPairing {
     weekKey: string
 }
 
-function getWeekKey(date = new Date()) {
+export function getWeekKey(date = new Date()) {
     const target = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()))
     const dayNumber = (target.getUTCDay() + 6) % 7
     target.setUTCDate(target.getUTCDate() - dayNumber + 3)
@@ -353,11 +353,25 @@ function hashSeed(value: string) {
         hash = ((hash << 5) + hash + value.charCodeAt(index)) | 0
     }
 
+    // DJB2 alone leaves the seed as a constant multiplier, so `seed:key` sorts the
+    // same way every week. This finalizer avalanches it, letting the seed reach every bit.
+    hash ^= hash >>> 16
+    hash = Math.imul(hash, 0x21f0aaad)
+    hash ^= hash >>> 15
+    hash = Math.imul(hash, 0x735a2d97)
+    hash ^= hash >>> 15
+
     return hash >>> 0
 }
 
-function seededShuffle<T>(items: T[], seed: string, getKey: (item: T) => string) {
-    return [...items].sort((a, b) => hashSeed(`${seed}:${getKey(a)}`) - hashSeed(`${seed}:${getKey(b)}`))
+export function seededShuffle<T>(items: T[], seed: string, getKey: (item: T) => string) {
+    return items
+        .map((item) => {
+            const key = getKey(item)
+            return { item, key, rank: hashSeed(`${seed}:${key}`) }
+        })
+        .sort((left, right) => left.rank - right.rank || left.key.localeCompare(right.key))
+        .map((entry) => entry.item)
 }
 
 export async function getAccountabilityPairing(
