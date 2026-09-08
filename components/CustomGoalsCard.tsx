@@ -1,17 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Goal, Minus, Plus } from "lucide-react"
 
+import { saveSettingsAction } from "@/app/dashboard/actions"
+import { useDebouncedPersist } from "@/lib/use-debounced-persist"
 import { Button } from "@/styleguide/components/ui/button"
 
 interface CustomGoalsCardProps {
     activeRepoCount: number
     hasCommitToday: boolean
+    initialRepoTarget: number
+    initialWeeklyTarget: number
     recentCommitCount: number
 }
-
-const STORAGE_KEY = "codestreak-goals"
 
 function clampGoal(value: number, min: number, max: number) {
     return Math.min(Math.max(value, min), max)
@@ -20,35 +22,17 @@ function clampGoal(value: number, min: number, max: number) {
 export default function CustomGoalsCard({
     activeRepoCount,
     hasCommitToday,
+    initialRepoTarget,
+    initialWeeklyTarget,
     recentCommitCount,
 }: CustomGoalsCardProps) {
-    const [weeklyTarget, setWeeklyTarget] = useState(7)
-    const [repoTarget, setRepoTarget] = useState(Math.max(activeRepoCount || 1, 3))
+    const [weeklyTarget, setWeeklyTarget] = useState(initialWeeklyTarget)
+    const [repoTarget, setRepoTarget] = useState(initialRepoTarget)
     const weeklyProgress = Math.min((recentCommitCount / weeklyTarget) * 100, 100)
     const repoProgress = Math.min((activeRepoCount / repoTarget) * 100, 100)
     const dailyProgress = hasCommitToday ? 100 : 0
 
-    useEffect(() => {
-        try {
-            const saved = window.localStorage.getItem(STORAGE_KEY)
-            const parsed = saved ? JSON.parse(saved) as { repoTarget?: number; weeklyTarget?: number } : {}
-
-            if (parsed.weeklyTarget) {
-                setWeeklyTarget(clampGoal(parsed.weeklyTarget, 1, 50))
-            }
-
-            if (parsed.repoTarget) {
-                setRepoTarget(clampGoal(parsed.repoTarget, 1, 20))
-            }
-        } catch {
-            setWeeklyTarget(7)
-            setRepoTarget(Math.max(activeRepoCount || 1, 3))
-        }
-    }, [activeRepoCount])
-
-    useEffect(() => {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ repoTarget, weeklyTarget }))
-    }, [repoTarget, weeklyTarget])
+    useDebouncedPersist({ activeRepoTarget: repoTarget, weeklyCommitTarget: weeklyTarget }, saveSettingsAction)
 
     function adjustWeeklyTarget(amount: number) {
         setWeeklyTarget((current) => clampGoal(current + amount, 1, 50))

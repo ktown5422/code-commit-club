@@ -1,9 +1,18 @@
 import DailyChecklist from "@/components/DailyChecklist"
 
-import { hasCommitToday, loadDashboardData } from "./data"
+import { hasCommitToday, loadDashboardData, loadTodayChecklist } from "./data"
 
 export default async function TodaySection({ accessToken }: { accessToken?: string }) {
-    const result = await loadDashboardData(accessToken)
+    const [result, checklist] = await Promise.all([
+        loadDashboardData(accessToken),
+        loadTodayChecklist(),
+    ])
 
-    return <DailyChecklist hasCommitToday={hasCommitToday(result)} />
+    return (
+        <DailyChecklist
+            dayKey={checklist.dayKey}
+            hasCommitToday={hasCommitToday(result)}
+            initialCompletedItems={checklist.completedItems}
+        />
+    )
 }

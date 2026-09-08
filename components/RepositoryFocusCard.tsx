@@ -1,15 +1,16 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { GitBranch, GitCommitHorizontal, Star } from "lucide-react"
 
+import { saveSettingsAction } from "@/app/dashboard/actions"
+import { useDebouncedPersist } from "@/lib/use-debounced-persist"
 import type { GitHubRepoSummary } from "@/lib/github"
 
 interface RepositoryFocusCardProps {
+    initialFocusRepo: string | null
     repos: GitHubRepoSummary[]
 }
-
-const STORAGE_KEY = "codestreak-focus-repo"
 
 const taskSuggestions = [
     "Clean up one component and commit the smallest useful improvement.",
@@ -32,21 +33,21 @@ function getSuggestion(repoName: string) {
     return taskSuggestions[total % taskSuggestions.length]
 }
 
-export default function RepositoryFocusCard({ repos }: RepositoryFocusCardProps) {
-    const [selectedFullName, setSelectedFullName] = useState("")
+export default function RepositoryFocusCard({
+    initialFocusRepo,
+    repos,
+}: RepositoryFocusCardProps) {
+    // The saved repo may have been renamed or dropped off the recent list since
+    // it was chosen, so fall back to the most recently pushed one.
+    const [selectedFullName, setSelectedFullName] = useState(() => {
+        const savedIsStillListed = repos.some((repo) => repo.fullName === initialFocusRepo)
 
-    useEffect(() => {
-        const saved = window.localStorage.getItem(STORAGE_KEY)
-        const savedRepo = saved ? repos.find((repo) => repo.fullName === saved) : undefined
+        return savedIsStillListed && initialFocusRepo
+            ? initialFocusRepo
+            : repos[0]?.fullName ?? ""
+    })
 
-        setSelectedFullName(savedRepo?.fullName ?? repos[0]?.fullName ?? "")
-    }, [repos])
-
-    useEffect(() => {
-        if (selectedFullName) {
-            window.localStorage.setItem(STORAGE_KEY, selectedFullName)
-        }
-    }, [selectedFullName])
+    useDebouncedPersist({ focusRepoFullName: selectedFullName }, saveSettingsAction)
 
     const selectedRepo = useMemo(
         () => repos.find((repo) => repo.fullName === selectedFullName) ?? repos[0],
@@ -75,7 +76,7 @@ export default function RepositoryFocusCard({ repos }: RepositoryFocusCardProps)
 
                 <select
                     aria-label="Choose focus repository"
-                    className="h-10 rounded-md border border-[#d9e2ec] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition-colors focus:border-[#f97316]"
+                    className="h-10 w-full rounded-md border border-[#d9e2ec] bg-white px-3 text-sm font-medium text-[#111827] outline-none transition-colors focus:border-[#f97316] sm:w-auto sm:max-w-[240px]"
                     onChange={(event) => setSelectedFullName(event.target.value)}
                     value={selectedRepo.fullName}
                 >

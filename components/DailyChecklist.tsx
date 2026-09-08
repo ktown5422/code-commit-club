@@ -1,13 +1,19 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { Check, ClipboardCheck, RotateCcw } from "lucide-react"
 
+import { saveChecklistAction } from "@/app/dashboard/actions"
+import { useDebouncedPersist } from "@/lib/use-debounced-persist"
 import { Button } from "@/styleguide/components/ui/button"
 import { cn } from "@/lib/utils"
 
 interface DailyChecklistProps {
+    // Supplied by the server so the client cannot disagree about which day this
+    // is — the browser's local date and the server's UTC date can differ.
+    dayKey: string
     hasCommitToday: boolean
+    initialCompletedItems: string[]
 }
 
 interface ChecklistItem {
@@ -24,51 +30,27 @@ const items: ChecklistItem[] = [
     { id: "share-discord", label: "Share progress to Discord" },
 ]
 
-function getTodayKey() {
-    const date = new Date()
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, "0")
-    const day = String(date.getDate()).padStart(2, "0")
+export default function DailyChecklist({
+    dayKey,
+    hasCommitToday,
+    initialCompletedItems,
+}: DailyChecklistProps) {
+    const [checkedItems, setCheckedItems] = useState<string[]>(() => {
+        const initial = new Set(initialCompletedItems)
 
-    return `${year}-${month}-${day}`
-}
+        // GitHub is the source of truth for this one — if a commit landed today
+        // it is ticked whether or not the member ever tapped it.
+        if (hasCommitToday) {
+            initial.add("commit-pushed")
+        }
 
-function getStorageKey() {
-    return `codestreak-checklist-${getTodayKey()}`
-}
-
-export default function DailyChecklist({ hasCommitToday }: DailyChecklistProps) {
-    const [checkedItems, setCheckedItems] = useState<string[]>([])
-    const [loaded, setLoaded] = useState(false)
+        return [...initial]
+    })
     const checkedSet = useMemo(() => new Set(checkedItems), [checkedItems])
     const completedCount = items.filter((item) => checkedSet.has(item.id)).length
     const progress = Math.round((completedCount / items.length) * 100)
 
-    useEffect(() => {
-        try {
-            const saved = window.localStorage.getItem(getStorageKey())
-            const parsed = saved ? JSON.parse(saved) as string[] : []
-            const initial = new Set(parsed)
-
-            if (hasCommitToday) {
-                initial.add("commit-pushed")
-            }
-
-            setCheckedItems([...initial])
-        } catch {
-            setCheckedItems(hasCommitToday ? ["commit-pushed"] : [])
-        } finally {
-            setLoaded(true)
-        }
-    }, [hasCommitToday])
-
-    useEffect(() => {
-        if (!loaded) {
-            return
-        }
-
-        window.localStorage.setItem(getStorageKey(), JSON.stringify(checkedItems))
-    }, [checkedItems, loaded])
+    useDebouncedPersist(checkedItems, (completed) => saveChecklistAction(dayKey, completed), 400)
 
     function toggleItem(id: string) {
         setCheckedItems((current) =>

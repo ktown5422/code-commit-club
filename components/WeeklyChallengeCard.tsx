@@ -1,18 +1,19 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Minus, Plus, Target, Trophy } from "lucide-react"
 
+import { saveSettingsAction } from "@/app/dashboard/actions"
+import { useDebouncedPersist } from "@/lib/use-debounced-persist"
 import { Button } from "@/styleguide/components/ui/button"
 import type { GitHubContributor } from "@/lib/github"
 
 interface WeeklyChallengeCardProps {
     contributors: GitHubContributor[]
+    initialGoal: number
     isDiscordFiltered?: boolean
 }
 
-const STORAGE_KEY = "codestreak-weekly-challenge-goal"
-const DEFAULT_GOAL = 250
 const MIN_GOAL = 50
 const MAX_GOAL = 5000
 const GOAL_STEP = 25
@@ -23,28 +24,16 @@ function clampGoal(value: number) {
 
 export default function WeeklyChallengeCard({
     contributors,
+    initialGoal,
     isDiscordFiltered = false,
 }: WeeklyChallengeCardProps) {
-    const [goal, setGoal] = useState(DEFAULT_GOAL)
+    const [goal, setGoal] = useState(initialGoal)
     const totalCommits = contributors.reduce((sum, contributor) => sum + contributor.commits, 0)
     const progress = Math.min((totalCommits / goal) * 100, 100)
     const reached = totalCommits >= goal
     const sortedContributors = [...contributors].sort((a, b) => b.commits - a.commits).slice(0, 3)
 
-    useEffect(() => {
-        try {
-            const saved = window.localStorage.getItem(STORAGE_KEY)
-            if (saved) {
-                setGoal(clampGoal(Number(saved)))
-            }
-        } catch {
-            setGoal(DEFAULT_GOAL)
-        }
-    }, [])
-
-    useEffect(() => {
-        window.localStorage.setItem(STORAGE_KEY, String(goal))
-    }, [goal])
+    useDebouncedPersist({ weeklyChallengeGoal: goal }, saveSettingsAction)
 
     function adjustGoal(amount: number) {
         setGoal((current) => clampGoal(current + amount))

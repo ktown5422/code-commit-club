@@ -7,7 +7,7 @@ import RepositoryFocusCard from "@/components/RepositoryFocusCard"
 import StatsCard from "@/components/StatsCard"
 import StreakHeatmap from "@/components/StreakHeatmap"
 
-import { hasCommitToday, loadBotStatus, loadDashboardData } from "./data"
+import { hasCommitToday, loadBotStatus, loadDashboardData, loadMemberSettings } from "./data"
 
 function buildEmptyHeatmap() {
     const weeks = 6
@@ -28,9 +28,10 @@ function buildEmptyHeatmap() {
 }
 
 export default async function ActivitySection({ accessToken }: { accessToken?: string }) {
-    const [result, discordBotStatus] = await Promise.all([
+    const [result, discordBotStatus, settings] = await Promise.all([
         loadDashboardData(accessToken),
         loadBotStatus(),
+        loadMemberSettings(),
     ])
     const { data } = result
     const profile = data?.profile
@@ -70,7 +71,7 @@ export default async function ActivitySection({ accessToken }: { accessToken?: s
             </div>
 
             <div className="mt-4 grid gap-6 xl:grid-cols-[1fr_0.9fr]">
-                <RepositoryFocusCard repos={repos} />
+                <RepositoryFocusCard initialFocusRepo={settings.focusRepoFullName} repos={repos} />
                 <LastCommitCard commit={data?.lastCommit ?? null} />
             </div>
 
@@ -84,6 +85,8 @@ export default async function ActivitySection({ accessToken }: { accessToken?: s
                 <CustomGoalsCard
                     activeRepoCount={repos.length}
                     hasCommitToday={hasCommitToday(result)}
+                    initialRepoTarget={settings.activeRepoTarget}
+                    initialWeeklyTarget={settings.weeklyCommitTarget}
                     recentCommitCount={data?.recentCommitCount ?? 0}
                 />
 

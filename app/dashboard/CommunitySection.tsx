@@ -13,12 +13,13 @@ import {
     type DiscordCommunityMatchingResult,
 } from "@/lib/discord"
 
-import { loadBotStatus, loadDashboardData } from "./data"
+import { loadBotStatus, loadDashboardData, loadMemberSettings } from "./data"
 
 export default async function CommunitySection({ accessToken }: { accessToken?: string }) {
-    const [{ data }, discordBotStatus] = await Promise.all([
+    const [{ data }, discordBotStatus, settings] = await Promise.all([
         loadDashboardData(accessToken),
         loadBotStatus(),
+        loadMemberSettings(),
     ])
     const topContributors = data?.topContributors ?? []
     const followingLeaderboard = data?.followingContributors ?? []
@@ -71,7 +72,11 @@ export default async function CommunitySection({ accessToken }: { accessToken?: 
     return (
         <>
             <div className="mt-3">
-                <WeeklyChallengeCard contributors={leaderboard} isDiscordFiltered={isDiscordLeaderboard} />
+                <WeeklyChallengeCard
+                    contributors={leaderboard}
+                    initialGoal={settings.weeklyChallengeGoal}
+                    isDiscordFiltered={isDiscordLeaderboard}
+                />
             </div>
 
             <div className="mt-4 grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
