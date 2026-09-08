@@ -51,7 +51,7 @@ export default function LastCommitCard({ commit }: LastCommitCardProps) {
             </div>
 
             <div className="mt-5 rounded-lg bg-[#111827] p-5 text-white">
-                <p className="text-xl font-bold leading-7">
+                <p className="text-xl font-bold leading-7 break-words">
                     {getFirstLine(commit.message)}
                 </p>
                 <div className="mt-4 grid gap-3 text-sm sm:grid-cols-2">

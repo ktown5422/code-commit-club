@@ -120,4 +120,19 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /*
+   * Flex and grid items default to `min-width: auto`, so they refuse to shrink
+   * below their content's intrinsic width. One long unbreakable string — a repo
+   * name, a Discord handle, a `truncate` span (which sets white-space: nowrap) —
+   * or a chart canvas then forces the whole page wider than the viewport, and
+   * every sibling stretches to match. Opting items into `min-width: 0` is what
+   * makes truncation and overflow-x containers behave on small screens.
+   *
+   * `:where()` keeps this at zero specificity, so any explicit `min-w-*` utility
+   * still wins, and `shrink-0` items keep their size via flex-shrink.
+   */
+  :where(.grid, .flex) > * {
+    min-width: 0;
+  }
 }

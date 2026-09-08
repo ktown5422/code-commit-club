@@ -66,7 +66,7 @@ export default function CommunityMatchingCard({ matching }: CommunityMatchingCar
                                         matchedPreview.map((member) => (
                                             <div key={`${member.displayName}-${member.githubHandle}`} className="flex items-center justify-between gap-3 text-sm">
                                                 <span className="truncate font-medium text-[#111827]">{member.displayName}</span>
-                                                <span className="shrink-0 font-bold text-[#0f766e]">{formatHandle(member.githubHandle)}</span>
+                                                <span className="truncate font-bold text-[#0f766e]">{formatHandle(member.githubHandle)}</span>
                                             </div>
                                         ))
                                     ) : (
