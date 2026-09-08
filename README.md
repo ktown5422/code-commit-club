@@ -7,6 +7,10 @@
 ![NextAuth](https://img.shields.io/badge/Auth-GitHub-181717?style=for-the-badge&logo=github)
 ![Octokit](https://img.shields.io/badge/API-Octokit-6E40C9?style=for-the-badge&logo=github)
 
+[![CI](https://github.com/ktown5422/code-commit-club/actions/workflows/ci.yml/badge.svg)](https://github.com/ktown5422/code-commit-club/actions/workflows/ci.yml)
+
+**[→ Try the live app](https://codestreakapp.vercel.app)** · Sign in with GitHub to see your own streak data.
+
 CodeStreak is a modern GitHub habit tracker built with Next.js. It helps developers stay consistent by turning daily commits into visible progress, streaks, profile insights, contributor data, and leaderboard momentum.
 
 ## Overview
@@ -28,8 +32,10 @@ The app currently includes:
 - `Tailwind CSS 4`
 - `NextAuth v5 beta`
 - `Octokit`
+- `PostgreSQL` with `Prisma`
 - `Chart.js` with `react-chartjs-2`
 - `Framer Motion`
+- `Vitest` for unit and database tests
 
 ## Features
 
@@ -49,6 +55,12 @@ Install dependencies:
 
 ```bash
 npm install
+```
+
+Create the database and apply migrations:
+
+```bash
+createdb codestreak_dev && npm run db:migrate
 ```
 
 Start the development server:
@@ -71,6 +83,7 @@ DISCORD_BOT_TOKEN="your-discord-bot-token"
 DISCORD_GUILD_ID="your-discord-server-id"
 DISCORD_CHANNEL_ID="your-discord-channel-id"
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
+DATABASE_URL="postgresql://localhost:5432/codestreak_dev"
 ```
 
 For local development, your GitHub OAuth app callback URL should be:
@@ -118,6 +131,79 @@ npm run lint
 ```
 
 Runs linting checks.
+
+```bash
+npm run test
+```
+
+Runs the unit test suite once. Use `npm run test:watch` while developing.
+
+```bash
+npm run typecheck
+```
+
+Runs TypeScript with no emit.
+
+## Testing
+
+The habit logic is written as pure functions so it can be tested without touching the
+GitHub or Discord APIs. `vitest` covers the parts where the edge cases actually live:
+
+- `calculateStreaks` — an empty *today* pauses a streak rather than breaking it, gaps
+  end it, and future-dated calendar days are ignored
+- `buildCommitTimeInsight` — commit-hour bucketing and window boundaries
+- `normalizeHandle` / `collectMemberAliases` — matching Discord members to GitHub
+  contributors by username, global name, nickname, or an `@handle` inside a nickname
+- `getWeekKey` / `seededShuffle` — deterministic weekly accountability pairings
+
+`lib/member-store.test.ts` covers the database layer against a real Postgres,
+since the behaviour worth testing there — upserts, the composite unique key,
+server-side clamping, and cascading deletes — is exactly what a mock would hide.
+
+Every push and pull request runs migrations against a Postgres service
+container, then typecheck, lint, tests, and a production build in CI.
+
+## Database
+
+Member state — commit targets, the weekly challenge goal, the focus repository,
+and each day's checklist — is stored in Postgres through Prisma, so it follows a
+member across devices instead of living in one browser.
+
+Three tables, defined in `prisma/schema.prisma`:
+
+- `users` — one row per GitHub account, keyed by a unique `githubLogin` and
+  created lazily on first dashboard load
+- `user_settings` — one row per user (`1:1`), holding the targets they picked
+- `checklist_days` — one row per user per calendar day, with a composite unique
+  key on `(userId, day)` so the daily save is a safe upsert
+
+Both child tables cascade on delete, and every numeric target is clamped
+server-side in `lib/member-store.ts` rather than trusting the client that posted
+it. Writes go through Next.js server actions in `app/dashboard/actions.ts`, each
+of which re-derives the caller from the session instead of accepting a user id.
+
+Useful commands:
+
+```bash
+npm run db:migrate
+```
+
+Creates and applies a migration in development.
+
+```bash
+npm run db:deploy
+```
+
+Applies existing migrations — this is what CI and production run.
+
+```bash
+npm run db:studio
+```
+
+Opens Prisma Studio to browse the data.
+
+For production, point `DATABASE_URL` at any hosted Postgres (Neon, Supabase, and
+Vercel Postgres all work), then run `npm run db:deploy` once against it.
 
 ## GitHub Data Layer
 
