@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+// Prisma 7 takes the connection URL from prisma.config.ts (for the CLI) and
+// from the driver adapter in lib/db.ts (at runtime), not from this block.
+datasource db {
+  provider = "postgresql"
+}
+
+// One row per GitHub account that has signed in. Created lazily on first
+// dashboard load rather than in an auth callback, so the auth path stays
+// free of database access.
+model User {
+  id          String   @id @default(cuid())
+  githubLogin String   @unique
+  name        String?
+  email       String?
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  settings      UserSettings?
+  checklistDays ChecklistDay[]
+
+  @@map("users")
+}
+
+// The targets a member sets for themselves. One row per user; defaults here
+// match what the UI showed before these lived in the browser.
+model UserSettings {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  weeklyCommitTarget  Int      @default(7)
+  activeRepoTarget    Int      @default(3)
+  weeklyChallengeGoal Int      @default(250)
+  focusRepoFullName   String?
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+// One row per user per calendar day, holding the checklist items ticked that
+// day. The composite unique key is what makes the daily upsert safe.
+model ChecklistDay {
+  id             String   @id @default(cuid())
+  userId         String
+  day            DateTime @db.Date
+  completedItems String[]
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, day])
+  @@index([userId])
+  @@map("checklist_days")
+}
